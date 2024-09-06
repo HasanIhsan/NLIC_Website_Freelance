@@ -22,7 +22,7 @@ app.use(express.json());
 app.get('/proxy', async (req, res) => {
   try {
     const response = await axios.post(
-      'https://us-east-2.aws.data.mongodb-api.com/app/data-capmckh/endpoint/data/v1/action/aggregate',
+      `${apiEndpoint}aggregate`,
       {
         dataSource: 'Cluster0',
         database: 'NLIC_DATABASE',
@@ -42,6 +42,12 @@ app.get('/proxy', async (req, res) => {
                     foreignField: 'personId',
                     as: 'reviews'
                   }
+                },
+                {
+                  $project: {
+                    // Exclude the image data
+                    image: 0
+                  }
                 }
               ]
             }
@@ -60,11 +66,11 @@ app.get('/proxy', async (req, res) => {
                 $push: {
                   _id: '$people._id',
                   name: '$people.personName',
-                  description: '$people.personDescription', // Use the correct field name
+                  description: '$people.personDescription',
                   contactNumber: '$people.contactNumber',
                   workLocation: '$people.workLocation',
-                  image: '$people.image', // Directly accessing the image object
                   reviews: '$people.reviews'
+                  // Exclude image here as well
                 }
               }
             }
@@ -74,14 +80,48 @@ app.get('/proxy', async (req, res) => {
       {
         headers: {
           'Content-Type': 'application/ejson',
-          'Accept': 'application/json',
-          'apiKey': '1iO7ax1hAaBEgS5TIPv760HC06gm2lZvxGj9OsUfRZpkmwO2yd03noaDzo5XrXuJ'
+          Accept: 'application/json',
+          apiKey: apiKey
         }
       }
     );
     res.json(response.data);
   } catch (error) {
     console.error('Error making request:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// New route to get a person's image by their ID
+app.get('/get-image/:id', async (req, res) => {
+  const personId = req.params.id;
+
+  try {
+    const response = await axios.post(
+      `${apiEndpoint}findOne`,
+      {
+        dataSource: 'Cluster0',
+        database: dbName,
+        collection: 'People',
+        filter: { _id: { $oid: personId } },
+        projection: { image: 1 } // Only return the image data
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'apiKey': apiKey
+        }
+      }
+    );
+
+    const imageData = response.data.document.image;
+    if (imageData) {
+      res.json(imageData);
+    } else {
+      res.status(404).json({ error: 'Image not found' });
+    }
+  } catch (error) {
+    console.error('Error fetching image:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
