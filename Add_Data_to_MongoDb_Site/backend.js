@@ -8,12 +8,14 @@ const { Binary } = require('mongodb');
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 const Jimp = require('jimp');
+
+require('dotenv').config()
 //const faceapi = require('face-api.js');
 //const canvas = require('canvas');
 //const { Canvas, Image, ImageData } = canvas;
 
-const apiKey = '1iO7ax1hAaBEgS5TIPv760HC06gm2lZvxGj9OsUfRZpkmwO2yd03noaDzo5XrXuJ';
-const dataApiUrl = 'https://data.mongodb-api.com/app/data-capmckh/endpoint/data/v1';
+const apiKey = process.env.API_KEY;
+const dataApiUrl = process.env.DATA_API_URL;
 
 app.use(cors());
 app.use(express.json());
