@@ -5,9 +5,11 @@ const cors = require('cors');
 const { MongoClient, ObjectId } = require('mongodb');
 const app = express();
 const port = 3000;
+require('dotenv').config()
 
-const apiEndpoint = 'https://us-east-2.aws.data.mongodb-api.com/app/data-capmckh/endpoint/data/v1/action/insertOne';
-const apiKey = '1iO7ax1hAaBEgS5TIPv760HC06gm2lZvxGj9OsUfRZpkmwO2yd03noaDzo5XrXuJ';
+
+const apiEndpoint = process.env.ATA_API_URL_ENDPOINT;
+const apiKey = process.env.API_KEY;
 
 const dbName = 'NLIC_DATABASE';
 const reviewCollection = 'Reviews';
