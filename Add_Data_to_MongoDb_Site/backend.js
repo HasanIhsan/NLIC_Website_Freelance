@@ -179,10 +179,10 @@ app.post('/api/people', upload.single('imageFile'), async (req, res) => {
     }*/
    
     const image = await Jimp.read(imageFile.path);
-    image.quality(80).resize(1280, 1280);// Adjust quality if needed (0-100, 100 being the best quality)
-    const fileData = await image.getBase64Async(Jimp.MIME_JPEG);
+    image.quality(60).resize(1280, 1280);// Adjust quality if needed (0-100, 100 being the best quality)
+    const fileData = await image.getBase64Async(Jimp.MIME_PNG);
     const base64Data = fileData.replace(/^data:image\/\w+;base64,/, "");
-    const mimeType = Jimp.MIME_JPEG;
+    const mimeType = Jimp.MIME_PNG;
  
     
     // Check if the person already exists

@@ -15,11 +15,10 @@ function filterJobs(query) {
     updateTabs(filteredJobs);
 }
 
-async function fetchData() {
+async function fetchData(page = 1, limit = 10) {
     const apiUrl = 'proxy';
-
     try {
-        const response = await fetch(`${localhost}${apiUrl}`, {
+        const response = await fetch(`${localhost}${apiUrl}?page=${page}&limit=${limit}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
