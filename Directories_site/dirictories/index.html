@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NLIC</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+    <h1 class="header">NLIC - Community</h1>
+
+    <div class="topnav">
+        <a   href="#home">Home</a>
+        <a href="#notice">notice board & Forms</a>
+        <a href="#Membership">Memberships</a>
+        <a href="#Contributions">Contributions</a>
+        <a href="#Founders">Founder Members</a>
+        <a class="active" href="#directories">Directories</a>
+    </div>
+    
+    <main>
+     
+
+        <div class="tab">
+          <div class="search-container">
+              <form>
+                  <input type="text" placeholder="Search.." name="search">
+              </form>
+          </div>
+          <!-- Placeholder for dynamic tabs -->
+          <div id="jobTabs" class="tablinks"></div>
+      </div>
+
+        <div class="tabContentsHolder"> 
+          <!-- Placeholder for dynamic content -->
+            <div id="tabContents" ></div> 
+        </div>
+        <div id="personDetails" class="person-details tabhidden">
+          <div class="person-detail-content">
+              <button class="close-button" onclick="closePersonDetails()">Close</button>
+              <div class="person-info">
+                  <img id="personImage" class="person-detail-image" src="" alt="">
+                  <div class="person-text">
+                      <h2 id="personName"></h2>
+                      <p id="personDescription"></p>
+                      <p id="personPhoneNumber"></p>
+                      <p id="personWorkLocation"></p>
+                  </div>
+              </div>
+              <button class="reviews-button" onclick="toggleReviewSection()">Reviews</button>
+              <div id="reviewSection" class="review-section tabhidden">
+                <div id="commentsSection">
+                    <!-- Example static review -->
+                    <div class="review"> 
+                        <div class="review-content">
+                            
+                              
+                        </div>
+                    </div>
+                    <!-- More reviews... -->
+                </div>
+            
+                <div class="review-input">
+                    <textarea id="reviewInput" placeholder="Write comment..."></textarea>
+                    <div class="rate">
+                        <input type="radio" id="star5" name="rate" value="5" />
+                        <label for="star5" title="text">5 stars</label>
+                        <input type="radio" id="star4" name="rate" value="4" />
+                        <label for="star4" title="text">4 stars</label>
+                        <input type="radio" id="star3" name="rate" value="3" />
+                        <label for="star3" title="text">3 stars</label>
+                        <input type="radio" id="star2" name="rate" value="2" />
+                        <label for="star2" title="text">2 stars</label>
+                        <input type="radio" id="star1" name="rate" value="1" />
+                        <label for="star1" title="text">1 star</label>
+                      </div>
+                    <button onclick="submitReview()">Submit</button>
+                </div>
+            </div>
+          </div>
+      </div>
+      
+      </main>
+
+    <footer>
+        <p>&copy; 2024 Hassan Ihsan. All rights reserved.</p>
+    </footer>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
