@@ -124,11 +124,11 @@ app.post('/api/people', upload.single('imageFile'), async (req, res) => {
     const { originalname, path: tempPath, mimetype } = imageFile;
     
 
-    //the following code is for canvas and face-api
-    //this works only locally...
-    //i get a invalid ELF header once i try to move it to netlify
-    //i'll have to figure out why this is happening and how to fix it!
-    /*    // Hook up face-api.js to use node-canvas
+    //*the following code is for canvas and face-api
+    //*this works only locally...
+    //*i get a invalid ELF header once i try to move it to netlify
+    //*i'll have to figure out why this is happening and how to fix it!
+    /*!    // Hook up face-api.js to use node-canvas
     faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 
     // Load face detection model
@@ -143,38 +143,38 @@ app.post('/api/people', upload.single('imageFile'), async (req, res) => {
   }
 
  
-    //Note: will optamize images:
-    //convert all images to jpeg
-    //optamize image to resize (1280, 1280)
-    //optamize image so it resizes around the persons face...
-    //compress the image
-    //upload base64 to database
+    //TODO: will optamize images:
+    //*convert all images to jpeg
+    //*optamize image to resize (1280, 1280)
+    //*optamize image so it resizes around the persons face...
+    //*compress the image
+    //*upload base64 to database
     const image = await Jimp.read(imageFile.path);
 
-    // Convert Jimp image to a format usable by face-api.js
+    //* Convert Jimp image to a format usable by face-api.js
     const img = await canvas.loadImage(imageFile.path);
     const detections = await faceapi.detectSingleFace(img);
 
     if (detections) {
       const { x, y, width, height } = detections.box;
   
-      // Center the face in the crop
+      // *Center the face in the crop
       const centerX = x + width / 2;
       const centerY = y + height / 2;
   
-      // Calculate the crop box (make sure it fits within the image boundaries)
+      // *Calculate the crop box (make sure it fits within the image boundaries)
       const cropSize = Math.min(image.bitmap.width, image.bitmap.height);
       const left = Math.max(0, centerX - cropSize / 2);
       const top = Math.max(0, centerY - cropSize / 2);
   
-      // Crop the image to focus on the face
+      //* Crop the image to focus on the face
       image.crop(left, top, cropSize, cropSize);
   
-      // Resize the cropped image to 1280x1280
+      // *Resize the cropped image to 1280x1280
       image.resize(1280, 1280);
     } else {
       console.log("no face detected");
-      // If no face is detected, fall back to resizing the whole image
+      // *If no face is detected, fall back to resizing the whole image
       image.resize(1280, 1280);
     }*/
    
