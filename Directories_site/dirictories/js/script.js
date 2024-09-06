@@ -55,31 +55,45 @@ function updateTabs(jobs) {
         contentDiv.id = job.name;
         contentDiv.className = 'tabcontent tabhidden';
 
-        job.people.forEach(person => {
+        job.people.forEach(async person => {
             const personDiv = document.createElement('div');
             personDiv.className = 'person';
-            
-            if (person.image && person.image.contentType && person.image.data) {
-                const img = document.createElement('img');
-                img.src = `data:${person.image.contentType};base64,${person.image.data}`;
-                img.alt = person.name;
-                img.className = 'person-image';
-                img.onclick = () => {
-                    showPersonDetails(person);
-                };
-                personDiv.appendChild(img);
-            }
 
             const nameDiv = document.createElement('div');
             nameDiv.textContent = person.name;
             nameDiv.className = 'person-name';
-            nameDiv.onclick = () => {
-                showPersonDetails(person);
-            };
+            nameDiv.onclick = () => showPersonDetails(person);
+
+            const img = document.createElement('img');
+            img.alt = person.name;
+            img.className = 'person-image';
+            img.onclick = () => showPersonDetails(person);
+            personDiv.appendChild(img); // Append the image element now
 
             personDiv.appendChild(nameDiv);
             contentDiv.appendChild(personDiv);
+
+            // Fetch the image data separately for each person
+            try {
+                const imageResponse = await fetch(`${localhost}get-image/${person._id}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (imageResponse.ok) {
+                    const imageData = await imageResponse.json();
+                    img.src = `data:${imageData.contentType};base64,${imageData.data}`;
+                } else {
+                    img.src = '/img.jpg'; // Fallback image if not found
+                }
+            } catch (error) {
+                console.error('Error fetching image:', error);
+                img.src = '/img.jpg'; // Fallback image in case of error
+            }
         });
+
         tabContents.appendChild(contentDiv);
     });
 
@@ -88,6 +102,7 @@ function updateTabs(jobs) {
         defaultTab.click();
     }
 }
+
 
 function openJobs(evt, jobName) {
     var i, tabcontent, tablinks;
