@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NLIC DEV</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div class="navbar">
+        <div class="logo">
+            <img src="Assets/logo.png" alt="NLIC Logo">
+            <span>NLIC Dev</span>
+        </div>
+        <div class="search-bar">
+            <input type="text" placeholder="Search">
+            <button>🔍</button>
+        </div>
+        <button class="logout-btn">Logout Admin</button>
+    </div>
+
+
+    <div class="menu">
+        <div class="menu-item" data-target="add">
+            <img src="Assets/Add-Logo.png" alt="Add">
+            <span>Add Data</span>
+        </div>
+        <div class="menu-item" data-target="delete">
+            <img src="Assets/Delete-Logo.png" alt="Delete">
+            <span>Delete Data</span>
+        </div>
+        <div class="menu-item" data-target="edit">
+            <img src="Assets/Edit-Logo.webp" alt="Edit">
+            <span>Edit Data</span>
+        </div>
+      
+    </div>
+
+    <div class="main-content">
+        <div id="add" class="content active">
+            <h1>Welcome to the Add Page</h1>
+            <form id="jobForm">
+                <h2>Add Job</h2>
+                <div class="form-group">
+                  <label for="jobName">Job Name: (Ex: Doctor, Plumber, Teacher)</label>
+                  <input type="text" id="jobName" name="jobName" required>
+                </div>
+                <button type="submit">Add Job</button>
+              </form>
+            
+              <!-- People Form -->
+              <form id="peopleForm" enctype="multipart/form-data">
+                <h2>Add Person</h2>
+                <div class="form-group">
+                  <label for="personName">Name:</label>
+                  <input type="text" id="personName" name="personName" required>
+                </div>
+                <div class="form-group">
+                  <label for="jobId">Job:</label>
+                  <select id="jobId" name="jobId" required></select>
+                </div>
+                <div class="form-group">
+                  <label for="personDescription">Description:</label>
+                  <textarea id="personDescription" name="personDescription" required></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="imageFile">Select Image:</label>
+                  <input type="file" id="imageFile" name="imageFile" accept="image/*" required>
+                </div>
+                <div class="form-group">
+                  <label for="contactNumber">Contact Phone Number:</label>
+                  <input type="text" id="contactNumber" name="contactNumber" required>
+                </div>
+                <div class="form-group">
+                  <label for="workLocation">Work Location:</label>
+                  <input type="text" id="workLocation" name="workLocation" required>
+                </div>
+                <button type="submit">Add Person</button>
+              </form>
+        </div>
+        <div id="delete" class="content">
+            <h1>Data Management</h1>
+            <!-- Jobs Management -->
+  <div class="list-container manage-jobs">
+    <h2>Manage Jobs</h2>
+    <div class="jobListDiv">
+        <div id="jobsList"></div>
+    </div>
+    
+    <button id="deleteJobButton" type="submit">Delete Selected Job</button>
+  </div>
+
+  <!-- People Management -->
+  <div class="list-container">
+    <h2>Manage People</h2>
+    <div class="form-group">
+      <label for="jobFilter">Filter by Job:</label>
+      <select id="jobFilter" required></select>
+    </div>
+    <div  id="peopleList"></div>
+    <button id="deletePeopleButton" type="submit">Delete Selected People</button>
+
+    <div class="list-container">
+        <h2>Manage reviews</h2>
+        <label for="peopleFilter">Filter by People:</label>
+        <select id="peopleFilter" required></select>
+    </div>
+    <div id="reviewList"></div>
+    <button id="deleteReviewButton" type="submit">Delete Selected Review</button>
+  </div>
+
+        </div>
+        <div id="edit" class="content">
+            <h1>Edit Page</h1>
+            
+            <div class="list-container">
+                
+                <label for="editPeopleFilter">Filter by People:</label>
+                <select id="editPeopleFilter" required></select>
+            </div>
+
+             <!-- edit People Form -->
+             <form id="peopleForm" enctype="multipart/form-data">
+                <h2>Edit Person</h2>
+                <div class="form-group">
+                  <label for="epersonName">Name:</label>
+                  <input type="text" id="epersonName" name="personName" required>
+                </div>
+                <div class="form-group">
+                  <label for="ejobId">Job:</label>
+                  <select id="ejobId" name="jobId" required></select>
+                </div>
+                <div class="form-group">
+                  <label for="epersonDescription">Description:</label>
+                  <textarea id="epersonDescription" name="personDescription" required></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="eimageFile">Select Image:</label>
+                  <input type="file" id="eimageFile" name="imageFile" accept="image/*" required>
+                </div>
+                <div class="form-group">
+                  <label for="econtactNumber">Contact Phone Number:</label>
+                  <input type="text" id="econtactNumber" name="contactNumber" required>
+                </div>
+                <div class="form-group">
+                  <label for="eworkLocation">Work Location:</label>
+                  <input type="text" id="eworkLocation" name="workLocation" required>
+                </div>
+                <div class="form-group">
+                    <label for="ememberShipNum">MemberShip Num:</label>
+                    <input type="text" id="ememberShipNum" name="memberShipNum" required>
+                  </div>
+                <button id="completeEditButton" type="submit"> Update </button>
+              </form>
+            
+        </div>
+         
+        <!-- Add similar divs for the rest of the menu items -->
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>

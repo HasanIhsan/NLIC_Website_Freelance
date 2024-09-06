@@ -1,0 +1,242 @@
+/*Main site css*/
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #F0F1F2;
+    padding: 10px 20px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+}
+
+.logo img {
+    height: 40px;
+    margin-right: 10px;
+}
+
+.logo span {
+    font-size: 24px;
+    font-weight: bold;
+    color: #D94135;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+}
+
+.search-bar input {
+    padding: 5px;
+    font-size: 16px;
+    border: 1px solid #CCCCCC;
+    border-radius: 4px 0 0 4px;
+}
+
+.search-bar button {
+    padding: 5px 10px;
+    border: 1px solid #CCCCCC;
+    border-radius: 0 4px 4px 0;
+    background-color: #FFFFFF;
+    cursor: pointer;
+}
+
+.logout-btn {
+    padding: 10px 20px;
+    background-color: #D94135;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.menu {
+    display: flex;
+    justify-content: space-around;
+    background-color: #EAEAEA;
+    padding: 10px 0;
+    border-top: 1px solid #CCCCCC;
+    border-bottom: 1px solid #CCCCCC;
+}
+
+.menu-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+}
+
+.menu-item img {
+    height: 40px;
+    margin-bottom: 5px;
+}
+
+.menu-item span {
+    font-size: 14px;
+    color: #333333;
+}
+
+.main-content {
+    padding: 20px;
+    background-color: #F9F9F9;
+}
+
+.content {
+    display: none;
+}
+
+.content.active {
+    display: block;
+}
+
+
+
+  h1 {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  /* Form Styles */
+  form {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+  }
+  
+  form h2 {
+    margin-top: 0;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  button[type="submit"] {
+    padding: 10px 15px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  button[type="submit"]:hover {
+    background-color: #45a049;
+  }
+  
+  #jobListDiv {
+    overflow-y: auto;
+  }
+  /* Manage Jobs Styles */
+  .manage-jobs {
+    margin-top: 20px;
+  }
+  
+  .manage-jobs h2 {
+    margin-top: 0;
+  }
+  
+  .manage-jobs .scrollable {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    padding: 10px;
+  }
+  
+  .manage-jobs .scrollable ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .manage-jobs .scrollable li {
+    margin-bottom: 10px;
+  }
+  
+  .manage-jobs .scrollable input[type="radio"] {
+    margin-right: 10px;
+  }
+  
+  .manage-jobs .scrollable button {
+    padding: 8px 12px;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .manage-jobs .scrollable button:hover {
+    background-color: #e53935;
+  }
+  
+  /* Manage People Styles */
+  .manage-people {
+    margin-top: 20px;
+  }
+  
+  .manage-people h2 {
+    margin-top: 0;
+  }
+  
+  .manage-people .scrollable {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    padding: 10px;
+  }
+  
+  .manage-people .scrollable ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .manage-people .scrollable li {
+    margin-bottom: 10px;
+  }
+  
+  .manage-people .scrollable input[type="radio"] {
+    margin-right: 10px;
+  }
+  
+  .manage-people .scrollable button {
+    padding: 8px 12px;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .manage-people .scrollable button:hover {
+    background-color: #e53935;
+  }
+  
