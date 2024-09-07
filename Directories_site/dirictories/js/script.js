@@ -31,13 +31,38 @@ async function fetchData(page = 1, limit = 10) {
 
         const data = await response.json();
         allJobs = data.documents;
+        await preloadImages(allJobs); // Preload images
         updateTabs(allJobs);
     } catch (error) {
         console.error('Error fetching data:', error);
     }
 }
 
-function updateTabs(jobs) {
+async function preloadImages(jobs) {
+    const imagePromises = [];
+
+    jobs.forEach(job => {
+        job.people.forEach(person => {
+            if (person._id) {
+                const imageUrl = `${localhost}get-image/${person._id}`;
+                const imagePromise = fetch(imageUrl)
+                    .then(response => response.json())
+                    .then(imageData => {
+                        // Cache image data
+                        person.imageData = imageData;
+                    })
+                    .catch(() => {
+                        // Fallback
+                        person.imageData = { contentType: 'image/jpeg', data: 'base64' }; // or some placeholder data
+                    });
+                imagePromises.push(imagePromise);
+            }
+        });
+    });
+
+    await Promise.all(imagePromises);
+}
+async function updateTabs(jobs) {
     const jobTabs = document.getElementById('jobTabs');
     const tabContents = document.getElementById('tabContents');
 
@@ -55,7 +80,7 @@ function updateTabs(jobs) {
         contentDiv.id = job.name;
         contentDiv.className = 'tabcontent tabhidden';
 
-        job.people.forEach(async person => {
+        job.people.forEach(person => {
             const personDiv = document.createElement('div');
             personDiv.className = 'person';
 
@@ -67,30 +92,19 @@ function updateTabs(jobs) {
             const img = document.createElement('img');
             img.alt = person.name;
             img.className = 'person-image';
+            img.src = '/placeholder.jpg'; // Placeholder image
             img.onclick = () => showPersonDetails(person);
             personDiv.appendChild(img); // Append the image element now
 
             personDiv.appendChild(nameDiv);
             contentDiv.appendChild(personDiv);
 
-            // Fetch the image data separately for each person
-            try {
-                const imageResponse = await fetch(`${localhost}get-image/${person._id}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (imageResponse.ok) {
-                    const imageData = await imageResponse.json();
-                    img.src = `data:${imageData.contentType};base64,${imageData.data}`;
-                } else {
-                    img.src = '/img.jpg'; // Fallback image if not found
-                }
-            } catch (error) {
-                console.error('Error fetching image:', error);
-                img.src = '/img.jpg'; // Fallback image in case of error
+            // Use cached image data if available
+            if (person.imageData) {
+                img.src = `data:${person.imageData.contentType};base64,${person.imageData.data}`;
+            } else {
+                // Image URL will be set when the image is fetched
+                img.dataset.imageUrl = `${localhost}get-image/${person._id}`;
             }
         });
 
@@ -118,14 +132,34 @@ function openJobs(evt, jobName) {
     if (evt) evt.currentTarget.className += " active";
 }
 
-function showPersonDetails(person) {
+async function showPersonDetails(person) {
     const personDetails = document.getElementById('personDetails');
     const personImage = document.getElementById('personImage');
 
-    if (person.image && person.image.contentType && person.image.data) {
-        personImage.src = `data:${person.image.contentType};base64,${person.image.data}`;
+    if (person.imageData) {
+        personImage.src = `data:${person.imageData.contentType};base64,${person.imageData.data}`;
     } else {
         personImage.src = '/img.jpg'; // Placeholder or default image
+        // Fetch image data if not already loaded
+        try {
+            const imageResponse = await fetch(`${localhost}get-image/${person._id}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (imageResponse.ok) {
+                const imageData = await imageResponse.json();
+                personImage.src = `data:${imageData.contentType};base64,${imageData.data}`;
+                person.imageData = imageData; // Cache image data
+            } else {
+                personImage.src = '/img.jpg'; // Fallback image if not found
+            }
+        } catch (error) {
+            console.error('Error fetching image:', error);
+            personImage.src = '/img.jpg'; // Fallback image in case of error
+        }
     }
 
     document.getElementById('personName').textContent = person.name;
@@ -182,6 +216,7 @@ function showPersonDetails(person) {
         commentsSection.innerHTML = '<p>No reviews available.</p>';
     }
 }
+
 
 function closePersonDetails() {
     const personDetails = document.getElementById('personDetails');
