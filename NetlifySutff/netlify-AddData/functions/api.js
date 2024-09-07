@@ -245,76 +245,7 @@ router.post('/api/people', upload.single('imageFile'), async (req, res) => {
   }
 });
 
-
-router.delete('/api/jobs/:id', async (req, res) => {
-  const { id } = req.params;
-  try {
-    // Step 1: Find all people associated with the job
-    const peopleResponse = await axios.post(`${dataApiUrl}/action/find`, {
-      collection: 'People',
-      database: 'NLIC_DATABASE',
-      dataSource: 'Cluster0',
-      filter: { jobId: { $oid: id } }
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'api-key': apiKey
-      }
-    });
-
-    const people = peopleResponse.data.documents;
-    const peopleIds = people.map(person => person._id);
-
-    //console.log(people);
-    console.log(peopleIds);
-    // Step 2: Delete reviews associated with the people
-    if (peopleIds.length > 0) {
-      await axios.post(`${dataApiUrl}/action/deleteMany`, {
-        collection: 'Reviews',
-        database: 'NLIC_DATABASE',
-        dataSource: 'Cluster0',
-        filter: { personId: { $in: peopleIds.map(id => ({ $oid: id })) } }
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'api-key': apiKey
-        }
-      });
-    }
-
-    // Step 3: Delete the people
-    if (peopleIds.length > 0) {
-      await axios.post(`${dataApiUrl}/action/deleteMany`, {
-        collection: 'People',
-        database: 'NLIC_DATABASE',
-        dataSource: 'Cluster0',
-        filter: { _id: { $in: peopleIds.map(id => ({ $oid: id })) } }
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'api-key': apiKey
-        }
-      });
-    }
-
-    // Step 4: Delete the job
-    await axios.post(`${dataApiUrl}/action/deleteOne`, {
-      collection: 'Jobs',
-      database: 'NLIC_DATABASE',
-      dataSource: 'Cluster0',
-      filter: { _id: { $oid: id } }
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'api-key': apiKey
-      }
-    }); 
-
-    res.json({ message: 'Job and associated people deleted' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+ 
 
 
 app.use('/.netlify/functions/api', router);
