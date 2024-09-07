@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Upload Form</title>
+  <style>
+    /* General Styles */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    /* Form Styles */
+    .form-container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+    }
+
+    .form-container h2 {
+      margin-top: 0;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button[type="submit"] {
+      padding: 10px 15px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #45a049;
+    }
+
+    .autocomplete-suggestions {
+      position: absolute;
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      max-height: 200px; /* Adjust based on your needs */
+      overflow-y: auto;
+      z-index: 1000; /* Ensure it appears on top */
+      width: calc(100% - 20px); /* Adjust based on your layout */
+    }
+    
+    .autocomplete-suggestion {
+      padding: 10px;
+      cursor: pointer;
+      border-bottom: 1px solid #ddd;
+      transition: background-color 0.3s ease;
+    }
+    
+    .autocomplete-suggestion:hover {
+      background-color: #f0f0f0;
+    }
+    
+    .autocomplete-suggestion:last-child {
+      border-bottom: none;
+    }
+  </style>
+  <script src="https://js.api.here.com/v3/3.1/mapsjs-core.js"></script> 
+  <script src="https://js.api.here.com/v3/3.1/mapsjs-service.js"></script> 
+  <script src="https://js.api.here.com/v3/3.1/mapsjs-ui.js"></script> 
+  <script src="https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"></script>
+
+</head>
+<body>
+  <h1>Data Upload Form</h1>
+
+  <div id="formContainer" class="form-container">
+    <!-- Dynamic form content will be injected here -->
+  </div>
+
+  <div id="loadingDiv" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; text-align: center;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white;">
+      <img src="loading.gif" alt="Loading..." />
+      <p>Uploading data, please wait...</p>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        let apiURL = "https://add-information-nlic.netlify.app/.netlify/functions/api/";
+      let pickedJobId = {};
+
+      const formContainer = document.getElementById('formContainer');
+
+      function showJobForm() {
+        formContainer.innerHTML = `
+          <form id="jobForm">
+            <h2>Enter Your Job</h2>
+            <div class="form-group">
+              <label for="jobName">Job Name: ( (please enter a very general name) Ex: Doctor, Plumber, Teacher)  </label>
+              <input type="text" id="jobName" name="jobName" required>
+            </div>
+            <button type="submit">Add Job</button>
+          </form>
+        `;
+
+        document.getElementById('jobForm').addEventListener('submit', handleJobFormSubmit);
+      }
+
+      function showPeopleForm() {
+        formContainer.innerHTML = `
+          <form id="peopleForm" enctype="multipart/form-data">
+            <h2>Enter Personal Information</h2>
+            <div class="form-group">
+              <label for="personName">Name (please enter you first and last name):</label>
+              <input type="text" id="personName" name="personName" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="personDescription">Description (Please enter a brief description about you and your Job):</label>
+              <textarea id="personDescription" name="personDescription" required></textarea>
+            </div>
+            <div class="form-group">
+              <label for="imageFile">Select Image (please choose an image of yourself):</label>
+              <input type="file" id="imageFile" name="imageFile" accept="image/*" required>
+            </div>
+            <div class="form-group">
+              <label for="contactNumber">Contact Phone Number:</label>
+              <input type="text" id="contactNumber" name="contactNumber" pattern="\\d{3}-\\d{3}-\\d{4}" placeholder="123-456-7890" required>
+              <small>Format: 123-456-7890</small>
+            </div>
+            <div class="form-group">
+              <label for="workLocation">Work Location:</label>
+              <input type="text" id="workLocation" name="workLocation" required>
+              <div id="suggestions" class="autocomplete-suggestions"></div>
+            </div>
+            <button type="submit">Add Person</button>
+          </form>
+        `;
+
+       // populateJobDropdown();
+
+       // Add event listener for phone number formatting
+        document.getElementById('contactNumber').addEventListener('input', formatPhoneNumber);
+
+        document.getElementById('peopleForm').addEventListener('submit', handlePeopleFormSubmit);
+
+        initializeAutocomplete();
+      }
+
+      function showSuccessMessage() {
+        formContainer.innerHTML = `
+          <h2>Person Added Successfully</h2>
+        `;
+      }
+
+      function capitalizeFirstLetter(input) {
+        if (!input) return ''; // Handle empty input
+        return input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
+     }
+
+      function handleJobFormSubmit(event) {
+        event.preventDefault();
+        const jobName = document.getElementById('jobName').value.toLowerCase();
+        const capitalizedJobName = capitalizeFirstLetter(document.getElementById('jobName').value.toLowerCase());
+        fetch(`${apiURL}api/jobs`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: capitalizedJobName })
+        })
+        .then(response => response.json())
+        .then(data => {
+          pickedJobId = data;
+          console.log(pickedJobId);
+          console.log(typeof pickedJobId === 'object');
+          showPeopleForm();
+        })
+        .catch(error => console.error('Error:', error));
+      }
+
+      function capitalizeName(name) {
+        if (!name) return ''; // Handle empty input
+        return name
+            .split(' ') // Split the name into an array of words
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize each word
+            .join(' '); // Join the array back into a single string
+      } 
+
+      function handlePeopleFormSubmit(event) {
+
+        console.log(`current picked job: ${pickedJobId}`);
+        event.preventDefault();
+        const formData = new FormData(event.target);
+
+        const name = capitalizeName(document.getElementById('personName').value);
+
+
+
+       if(typeof pickedJobId === 'object'){
+       
+        formData.set('jobId', pickedJobId._id);
+        formData.set('personName', name);
+       
+       }else {
+        formData.set('jobId', pickedJobId);
+        formData.set('personName', name);
+       }
+
+        
+
+        for (const [key, value] of formData.entries()) {
+          console.log(`${key}: ${value}`);
+        }
+
+        // Show the loading div
+        document.getElementById('loadingDiv').style.display = 'block';
+
+        fetch(`${apiURL}api/people`, {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => {
+          if (!response.ok) {
+            return response.text().then(text => { throw new Error(text); });
+          }
+          return response.json();
+        })
+        .then(data => {
+          
+          // Hide the loading div and show the success message 
+          document.getElementById('loadingDiv').style.display = 'none';
+
+          showSuccessMessage();
+        }) 
+        .catch(error => {
+          // Hide the loading div and show the success message 
+          document.getElementById('loadingDiv').style.display = 'none';
+          alert('Error: ' + error.message);
+          console.error('Error:', error);
+        
+       
+        });
+      }
+
+      /*function populateJobDropdown() {
+        fetch('http://localhost:3100/api/jobs')
+          .then(response => response.json())
+          .then(data => {
+            const jobSelect = document.getElementById('jobId');
+            data.forEach(job => {
+              const option = document.createElement('option');
+              option.value = job._id;
+              option.textContent = job.name;
+              jobSelect.appendChild(option);
+            });
+          });
+      }*/
+
+      // Show the job form initially
+
+      function formatPhoneNumber(event) {
+        const input = event.target;
+        const value = input.value.replace(/\D/g, ''); // Remove all non-digit characters
+        let formattedValue = '';
+    
+        if (value.length > 0) {
+          formattedValue += value.substring(0, 3);
+        }
+        if (value.length > 3) {
+          formattedValue += '-' + value.substring(3, 6);
+        }
+        if (value.length > 6) {
+          formattedValue += '-' + value.substring(6, 10);
+        }
+    
+        input.value = formattedValue;
+      }
+
+      function initializeAutocomplete() {
+        const platform = new H.service.Platform({
+          'apikey': 'vzyRyHQvPY8mOpu-YDAMCJpDKRCV100Q5t3NAnlQBek'
+        });
+
+        const service = platform.getSearchService();
+
+        const workLocationInput = document.getElementById('workLocation');
+        const suggestionsContainer = document.getElementById('suggestions');
+
+        workLocationInput.addEventListener('input', function () {
+          const query = workLocationInput.value;
+          if (query.length > 2) {
+            service.autosuggest({
+              q: query,
+              at: '56.1304,-106.3468', // Central coordinates for Canada
+              limit: 5
+            }, (result) => {
+              suggestionsContainer.innerHTML = '';
+              if (result.items) {
+                result.items.forEach((item) => {
+                  const div = document.createElement('div');
+                  div.classList.add('autocomplete-suggestion');
+                  div.textContent = item.address.label;
+                  div.addEventListener('click', function () {
+                    workLocationInput.value = item.address.label;
+                    suggestionsContainer.innerHTML = '';
+                  });
+                  suggestionsContainer.appendChild(div);
+                });
+              }
+            }, (error) => {
+              console.error(error);
+            });
+          } else {
+            suggestionsContainer.innerHTML = '';
+          }
+        });
+      }
+
+
+      showJobForm();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+[build]
+    public = "dist"
+    command = "npm install && npm run build"
+    functions = "functions"
