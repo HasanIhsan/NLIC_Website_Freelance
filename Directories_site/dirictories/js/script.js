@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 let allJobs = [];
-const localhost = "https://back-end-nlic.netlify.app/.netlify/functions/api/";
+const localhost = "https://back-end-nlic.netlify.app/.netlify/functions/api/"; // Backend URL
 
 function filterJobs(query) {
     const filteredJobs = allJobs.filter(job => job.name.toLowerCase().startsWith(query));
@@ -30,7 +30,7 @@ async function fetchData(page = 1, limit = 10) {
         }
 
         const data = await response.json();
-        allJobs = data.documents;
+        allJobs = data;
         await preloadImages(allJobs); // Preload images
         updateTabs(allJobs);
     } catch (error) {
@@ -53,7 +53,7 @@ async function preloadImages(jobs) {
                     })
                     .catch(() => {
                         // Fallback
-                        person.imageData = { contentType: 'image/jpeg', data: 'base64' }; // or some placeholder data
+                        person.imageData = { contentType: 'image/jpeg', data: 'base64' }; // Placeholder data
                     });
                 imagePromises.push(imagePromise);
             }
@@ -62,6 +62,7 @@ async function preloadImages(jobs) {
 
     await Promise.all(imagePromises);
 }
+
 async function updateTabs(jobs) {
     const jobTabs = document.getElementById('jobTabs');
     const tabContents = document.getElementById('tabContents');
@@ -116,7 +117,6 @@ async function updateTabs(jobs) {
         defaultTab.click();
     }
 }
-
 
 function openJobs(evt, jobName) {
     var i, tabcontent, tablinks;
@@ -178,22 +178,22 @@ async function showPersonDetails(person) {
         person.reviews.forEach(review => {
             const reviewDiv = document.createElement('div');
             reviewDiv.className = 'review';
-    
+
             const reviewContent = document.createElement('div');
             reviewContent.className = 'review-content';
-    
+
             const reviewer = document.createElement('span');
             reviewer.className = 'reviewer';
             reviewer.textContent = 'Reviewer:';
-    
+
             const reviewText = document.createElement('p');
             reviewText.className = 'comment';
             reviewText.textContent = review.review;
-    
+
             const ratingDiv = document.createElement('div');
             ratingDiv.className = 'rating-stars';
             const rating = review.rating;
-    
+
             for (let i = 1; i <= 5; i++) {
                 const star = document.createElement('span');
                 star.className = 'star';
@@ -205,7 +205,7 @@ async function showPersonDetails(person) {
                 }
                 ratingDiv.appendChild(star);
             }
-    
+
             reviewContent.appendChild(reviewer);
             reviewContent.appendChild(reviewText);
             reviewDiv.appendChild(reviewContent);
@@ -217,12 +217,10 @@ async function showPersonDetails(person) {
     }
 }
 
-
 function closePersonDetails() {
     const personDetails = document.getElementById('personDetails');
     personDetails.style.display = 'none';
 }
-
 function toggleReviewSection() {
     const reviewSection = document.getElementById('reviewSection');
     if (reviewSection.style.display === 'none' || reviewSection.style.display === '') {
@@ -232,19 +230,18 @@ function toggleReviewSection() {
     }
 }
 
+
 async function submitReview() {
     const reviewInput = document.getElementById('reviewInput');
     const reviewText = reviewInput.value.trim();
 
     const submitUrl = "submit-review";
-
     const starRating = document.querySelector('input[name="rate"]:checked');
-
     const personId = window.currentPersonId;
 
     if (reviewText && starRating && personId) {
         try {
-            const response = await fetch(localhost + submitUrl, {
+            const response = await fetch(`${localhost}${submitUrl}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

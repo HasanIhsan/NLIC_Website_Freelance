@@ -1,96 +1,120 @@
 const express = require('express');
 const serverless = require('serverless-http');
-const axios = require('axios');
-const cors = require('cors');
-const { MongoClient, ObjectId } = require('mongodb');
 const app = express();
-const port = 3000;
-require('dotenv').config()
+const router = express.Router();
+const cors = require('cors');
+const { MongoClient, ObjectId, ServerApiVersion } = require('mongodb');
+
+// MongoDB connection string (replace with your credentials)
+const uri = "mongodb+srv://ihsanhassanbusiness:Mmaster20010901@cluster0.mjm2ill.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+//const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
+let db;
+
+// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
+});
 
 
-const apiEndpoint = process.env.ATA_API_URL_ENDPOINT;
-const apiKey = process.env.API_KEY;
-
-const dbName = 'NLIC_DATABASE';
-const reviewCollection = 'Reviews';
-
- 
+// Connect to MongoDB and reuse the connection
+async function connectToDB() {
+  if (!db) {
+    try {
+      await client.connect();
+      db = client.db('NLIC_DATABASE');
+      console.log('Connected to MongoDB');
+    } catch (err) {
+      console.error('Failed to connect to MongoDB', err);
+      throw new Error('Database connection failed');
+    }
+  }
+}
 
 app.use(cors());
 app.use(express.json());
 
+// Simple health check
+app.get('/',  async (req, res) => {
+  
+  try {
+    await client.connect();
+    await client.db("admin").command({ ping: 1 });
+    res.send('App is running.. v1.0.10');
+  }catch(error) {
+    res.send(error);
+  }
+   
+
+    
+});
+
+// Route to get Jobs with associated People and Reviews
 app.get('/proxy', async (req, res) => {
   try {
-    const response = await axios.post(
-      `${apiEndpoint}aggregate`,
+    await connectToDB();
+    const jobs = db.collection('Jobs');
+    const result = await jobs.aggregate([
       {
-        dataSource: 'Cluster0',
-        database: 'NLIC_DATABASE',
-        collection: 'Jobs',
-        pipeline: [
-          {
-            $lookup: {
-              from: 'People',
-              localField: '_id',
-              foreignField: 'jobId',
-              as: 'people',
-              pipeline: [
-                {
-                  $lookup: {
-                    from: 'Reviews',
-                    localField: '_id',
-                    foreignField: 'personId',
-                    as: 'reviews'
-                  }
-                },
-                {
-                  $project: {
-                    // Exclude the image data
-                    image: 0
-                  }
-                }
-              ]
-            }
-          },
-          {
-            $unwind: {
-              path: '$people',
-              preserveNullAndEmptyArrays: true
-            }
-          },
-          {
-            $group: {
-              _id: '$_id',
-              name: { $first: '$name' },
-              people: {
-                $push: {
-                  _id: '$people._id',
-                  name: '$people.personName',
-                  description: '$people.personDescription',
-                  contactNumber: '$people.contactNumber',
-                  workLocation: '$people.workLocation',
-                  reviews: '$people.reviews'
-                  // Exclude image here as well
-                }
+        $lookup: {
+          from: 'People',
+          localField: '_id',
+          foreignField: 'jobId',
+          as: 'people',
+          pipeline: [
+            {
+              $lookup: {
+                from: 'Reviews',
+                localField: '_id',
+                foreignField: 'personId',
+                as: 'reviews'
+              }
+            },
+            {
+              $project: {
+                image: 0 // Exclude image data
               }
             }
-          }
-        ]
+          ]
+        }
       },
       {
-        headers: {
-          'Content-Type': 'application/ejson',
-          Accept: 'application/json',
-          apiKey: apiKey
+        $unwind: {
+          path: '$people',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $group: {
+          _id: '$_id',
+          name: { $first: '$name' },
+          people: {
+            $push: {
+              _id: '$people._id',
+              name: '$people.personName',
+              description: '$people.personDescription',
+              contactNumber: '$people.contactNumber',
+              workLocation: '$people.workLocation',
+              reviews: '$people.reviews'
+            }
+          }
         }
       }
-    );
-    res.json(response.data);
+    ]).toArray();
+
+    res.json(result);
   } catch (error) {
-    console.error('Error making request:', error);
+    console.error('Error fetching data:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+
+/*
 
 // New route to get a person's image by their ID
 app.get('/get-image/:id', async (req, res) => {
@@ -164,7 +188,8 @@ app.post('/submit-review', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
+*/
+const port = 3000;
 app.listen(port, () => {
   console.log(`Proxy server running at http://localhost:${port}`);
 });

@@ -2,98 +2,113 @@ const express = require('express');
 const serverless = require('serverless-http');
 const app = express();
 const router = express.Router();
-const axios = require('axios');
 const cors = require('cors');
-const { MongoClient, ObjectId } = require('mongodb');
+const { MongoClient, ObjectId, ServerApiVersion } = require('mongodb');
 
+// MongoDB connection string (replace with your credentials)
+const uri = "mongodb+srv://ihsanhassanbusiness:Mmaster20010901@cluster0.mjm2ill.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+//const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
- 
+let db;
 
-//Get all students
-router.get('/', (req, res) => {
-  res.send('App is running.. v1.0.10');
+// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
 });
 
 
-const apiEndpoint = 'https://us-east-2.aws.data.mongodb-api.com/app/data-capmckh/endpoint/data/v1/action/';
-const apiKey = '1iO7ax1hAaBEgS5TIPv760HC06gm2lZvxGj9OsUfRZpkmwO2yd03noaDzo5XrXuJ';
-
-const dbName = 'NLIC_DATABASE';
-const reviewCollection = 'Reviews';
+// Connect to MongoDB and reuse the connection
+async function connectToDB() {
+  if (!db) {
+    try {
+      await client.connect();
+      db = client.db('NLIC_DATABASE');
+      console.log('Connected to MongoDB');
+    } catch (err) {
+      console.error('Failed to connect to MongoDB', err);
+      throw new Error('Database connection failed');
+    }
+  }
+}
 
 app.use(cors());
 app.use(express.json());
 
+// Simple health check
+router.get('/',  async (req, res) => {
+  
+  try {
+    await client.connect();
+    await client.db("admin").command({ ping: 1 });
+    res.send('App is running.. v1.0.10');
+  }catch(error) {
+    res.send(error);
+  }
+   
 
+    
+});
+
+// Route to get Jobs with associated People and Reviews
 router.get('/proxy', async (req, res) => {
   try {
-    const response = await axios.post(
-      `${apiEndpoint}aggregate`,
+    await connectToDB();
+    const jobs = db.collection('Jobs');
+    const result = await jobs.aggregate([
       {
-        dataSource: 'Cluster0',
-        database: 'NLIC_DATABASE',
-        collection: 'Jobs',
-        pipeline: [
-          {
-            $lookup: {
-              from: 'People',
-              localField: '_id',
-              foreignField: 'jobId',
-              as: 'people',
-              pipeline: [
-                {
-                  $lookup: {
-                    from: 'Reviews',
-                    localField: '_id',
-                    foreignField: 'personId',
-                    as: 'reviews'
-                  }
-                },
-                {
-                  $project: {
-                    // Exclude the image data
-                    image: 0
-                  }
-                }
-              ]
-            }
-          },
-          {
-            $unwind: {
-              path: '$people',
-              preserveNullAndEmptyArrays: true
-            }
-          },
-          {
-            $group: {
-              _id: '$_id',
-              name: { $first: '$name' },
-              people: {
-                $push: {
-                  _id: '$people._id',
-                  name: '$people.personName',
-                  description: '$people.personDescription',
-                  contactNumber: '$people.contactNumber',
-                  workLocation: '$people.workLocation',
-                  reviews: '$people.reviews'
-                  // Exclude image here as well
-                }
+        $lookup: {
+          from: 'People',
+          localField: '_id',
+          foreignField: 'jobId',
+          as: 'people',
+          pipeline: [
+            {
+              $lookup: {
+                from: 'Reviews',
+                localField: '_id',
+                foreignField: 'personId',
+                as: 'reviews'
+              }
+            },
+            {
+              $project: {
+                image: 0 // Exclude image data
               }
             }
-          }
-        ]
+          ]
+        }
       },
       {
-        headers: {
-          'Content-Type': 'application/ejson',
-          Accept: 'application/json',
-          apiKey: apiKey
+        $unwind: {
+          path: '$people',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $group: {
+          _id: '$_id',
+          name: { $first: '$name' },
+          people: {
+            $push: {
+              _id: '$people._id',
+              name: '$people.personName',
+              description: '$people.personDescription',
+              contactNumber: '$people.contactNumber',
+              workLocation: '$people.workLocation',
+              reviews: '$people.reviews'
+            }
+          }
         }
       }
-    );
-    res.json(response.data);
+    ]).toArray();
+
+    res.json(result);
   } catch (error) {
-    console.error('Error making request:', error);
+    console.error('Error fetching data:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
@@ -103,26 +118,17 @@ router.get('/get-image/:id', async (req, res) => {
   const personId = req.params.id;
 
   try {
-    const response = await axios.post(
-      `${apiEndpoint}findOne`,
-      {
-        dataSource: 'Cluster0',
-        database: dbName,
-        collection: 'People',
-        filter: { _id: { $oid: personId } },
-        projection: { image: 1 } // Only return the image data
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'apiKey': apiKey
-        }
-      }
+    // Connect to MongoDB if not already connected
+    if (!db) await connectToDB();
+
+    // Query the 'People' collection to find the person by their ID
+    const person = await db.collection('People').findOne(
+      { _id: new ObjectId(personId) },
+      { projection: { image: 1 } } // Only return the image field
     );
 
-    const imageData = response.data.document.image;
-    if (imageData) {
-      res.json(imageData);
+    if (person && person.image) {
+      res.json(person.image); // Return the image data
     } else {
       res.status(404).json({ error: 'Image not found' });
     }
@@ -131,8 +137,7 @@ router.get('/get-image/:id', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
-//https://us-east-2.aws.data.mongodb-api.com/app/data-capmckh/endpoint/data/v1/action/insertOne
+// Route to submit a review
 router.post('/submit-review', async (req, res) => {
   const { personId, review, rating } = req.body;
 
@@ -141,37 +146,25 @@ router.post('/submit-review', async (req, res) => {
   }
 
   try {
-    const response = await axios.post(
-      `${apiEndpoint}insertOne`,
-      {
-        dataSource: 'Cluster0',
-        database: dbName,
-        collection: reviewCollection,
-        document: {
-          personId: { $oid: personId },
-          review: review,
-          rating: parseInt(rating, 10),
-          createdAt: { $date: new Date().toISOString() }
-        }
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'apiKey': apiKey
-        }
-      }
-    );
+    // Connect to MongoDB if not already connected
+    if (!db) await connectToDB();
+
+    // Insert the review into the 'Reviews' collection
+    const response = await db.collection('Reviews').insertOne({
+      personId: new ObjectId(personId),
+      review,
+      rating: parseInt(rating, 10),
+      createdAt: new Date()
+    });
 
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.status(201).json({ message: 'Review submitted', reviewId: response.data.insertedId });
+    res.status(201).json({ message: 'Review submitted', reviewId: response.insertedId });
   } catch (error) {
-    console.error('Error inserting review:', error.response ? error.response.data : error.message);
+    console.error('Error inserting review:', error);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
-
 
 app.use('/.netlify/functions/api', router);
 module.exports.handler = serverless(app);
